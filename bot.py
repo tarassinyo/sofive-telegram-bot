@@ -120,3 +120,55 @@ async def receive_poll_update(update: Update, context: CallbackContext) -> None:
             poll_data[poll_id]['message_id']
         )
         del poll_data[poll_id]
+
+
+async def auto_close_poll(context: CallbackContext) -> None:
+    """Closes the poll automatically at the scheduled time."""
+    job = context.job
+    poll_id = job.data['poll_id']
+
+    # Only close if the poll is still being tracked (i.e., not already closed)
+    if poll_id in poll_data:
+        chat_id = job.data['chat_id']
+        message_id = job.data['message_id']
+        logger.info(f"Auto-closing poll {poll_id} in chat {chat_id} as scheduled.")
+        
+        try:
+            await context.bot.stop_poll(chat_id, message_id)
+            del poll_data[poll_id]
+        except Exception as e:
+            logger.error(f"Failed to auto-close poll {poll_id}: {e}")
+
+
+# --- MAIN EXECUTION ---
+
+def main() -> None:
+    """Sets up and runs the bot."""
+    # Get the token from the environment variable for security
+    TOKEN = os.getenv("TELEGRAM_TOKEN")
+    if not TOKEN:
+        raise ValueError("No TELEGRAM_TOKEN found in environment variables")
+
+    application = Application.builder().token(TOKEN).build()
+    
+    # Add command handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("poll", poll_command))
+    application.add_handler(CommandHandler("chatid", chatid))
+    application.add_handler(PollHandler(receive_poll_update))
+
+    # Schedule the job to run daily to check if it should send the poll
+    job_queue = application.job_queue
+    job_queue.run_daily(
+        callback=send_weekly_poll,
+        # Time is set to 9:00 AM EST/EDT
+        time=datetime.time(hour=9, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
+        name="daily_poll_check"
+    )
+
+    # Start the bot
+    application.run_polling()
+
+
+if __name__ == '__main__':
+    main()
