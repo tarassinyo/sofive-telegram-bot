@@ -6,8 +6,9 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, PollHandler, CallbackContext
 
 # --- CONFIGURATION ---
-# Paste your group's chat ID here after you get it using the /chatid command.
+# 1. Paste your group's chat ID here after you get it using the /chatid command.
 TARGET_CHAT_ID = 0  # e.g., -100123456789
+# 2. Set your timezone. This correctly handles EST/EDT.
 TIMEZONE = "America/New_York"
 # ---------------------
 
@@ -82,8 +83,15 @@ async def poll_command(update: Update, context: CallbackContext) -> None:
 
 
 async def send_weekly_poll(context: CallbackContext) -> None:
-    """Function for the automated weekly poll job."""
-    logger.info(f"Running scheduled job to send weekly poll to {TARGET_CHAT_ID}.")
+    """Checks if it's Thursday and sends the weekly poll if it is."""
+    # Day check: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+    if datetime.date.today().weekday() != 3:
+        # If it's not Thursday, do nothing.
+        logger.info("Daily job ran, but it's not Thursday. Skipping poll.")
+        return
+    
+    # If it IS Thursday, send the poll.
+    logger.info(f"It's Thursday! Running scheduled job to send weekly poll.")
     if TARGET_CHAT_ID == 0:
         logger.warning("TARGET_CHAT_ID is not set in the code. Skipping scheduled poll.")
         return
@@ -99,70 +107,4 @@ async def receive_poll_update(update: Update, context: CallbackContext) -> None:
     plus_votes = update.poll.options[0].voter_count
 
     # Close the poll if the "+" option reaches 15 votes
-    if plus_votes >= 15:
-        logger.info(f"Closing poll {poll_id} as '+' has reached 15 votes.")
-        
-        # Cancel the scheduled auto-close job since this is closing early
-        current_jobs = context.job_queue.get_jobs_by_name(str(poll_id))
-        for job in current_jobs:
-            job.schedule_removal()
-        
-        await context.bot.stop_poll(
-            poll_data[poll_id]['chat_id'],
-            poll_data[poll_id]['message_id']
-        )
-        del poll_data[poll_id]
-
-
-async def auto_close_poll(context: CallbackContext) -> None:
-    """Closes the poll automatically at the scheduled time."""
-    job = context.job
-    poll_id = job.data['poll_id']
-
-    # Only close if the poll is still being tracked (i.e., not already closed)
-    if poll_id in poll_data:
-        chat_id = job.data['chat_id']
-        message_id = job.data['message_id']
-        logger.info(f"Auto-closing poll {poll_id} in chat {chat_id} as scheduled.")
-        
-        try:
-            await context.bot.stop_poll(chat_id, message_id)
-            del poll_data[poll_id]
-        except Exception as e:
-            logger.error(f"Failed to auto-close poll {poll_id}: {e}")
-
-
-# --- MAIN EXECUTION ---
-
-def main() -> None:
-    """Sets up and runs the bot."""
-    # Get the token from the environment variable for security
-    TOKEN = os.getenv("TELEGRAM_TOKEN")
-    if not TOKEN:
-        raise ValueError("No TELEGRAM_TOKEN found in environment variables")
-
-    application = Application.builder().token(TOKEN).build()
-    
-    # Add command handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("poll", poll_command))
-    application.add_handler(CommandHandler("chatid", chatid))
-    application.add_handler(PollHandler(receive_poll_update))
-
-    # Schedule the weekly poll job
-    job_queue = application.job_queue
-    # This example schedules the poll to be sent every Friday at 5:00 PM
-    job_queue.run_repeating(
-        callback=send_weekly_poll,
-        interval=datetime.timedelta(weeks=1),
-        days=(4,),  # 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
-        time=datetime.time(hour=17, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
-        name="weekly_poll_job"
-    )
-
-    # Start the bot
-    application.run_polling()
-
-
-if __name__ == '__main__':
-    main()
+    if plus_votes >=
