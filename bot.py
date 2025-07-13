@@ -107,8 +107,11 @@ async def receive_poll_update(update: Update, context: CallbackContext) -> None:
 
 def main() -> None:
     """Run the bot."""
-    # IMPORTANT: Replace this with your actual bot token
-    application = Application.builder().token("8019094318:AAEmddZML-7377C5LZFAhuof4LPTOjUHdzM").build()
+    # NEW: Get the token from the environment variable on Railway
+    TOKEN = os.getenv("TELEGRAM_TOKEN")
+    
+    # This line now uses the token from the variable
+    application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("poll", poll))
