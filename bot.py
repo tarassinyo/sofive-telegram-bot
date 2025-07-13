@@ -88,7 +88,7 @@ async def poll_command(update: Update, context: CallbackContext) -> None:
 async def send_weekly_poll(context: CallbackContext) -> None:
     """Checks if it's Thursday and sends the weekly poll if it is."""
     # Day check: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
-    if datetime.date.today().weekday() != 6:
+    if datetime.date.today().weekday() != 3:
         # If it's not Thursday, do nothing.
         logger.info("Daily job ran, but it's not Thursday. Skipping poll.")
         return
@@ -165,7 +165,7 @@ def main() -> None:
     job_queue.run_daily(
         callback=send_weekly_poll,
         # Time is set to 9:00 AM EST/EDT
-        time=datetime.time(hour=14, minute=8, second=0, tzinfo=pytz.timezone(TIMEZONE)),
+        time=datetime.time(hour=9, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
         name="daily_poll_check"
     )
 
