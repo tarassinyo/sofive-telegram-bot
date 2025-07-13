@@ -6,9 +6,12 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, PollHandler, CallbackContext
 
 # --- CONFIGURATION ---
-# 1. Paste your group's chat ID here after you get it using the /chatid command.
-TARGET_CHAT_ID = 0  # e.g., -100123456789
-# 2. Set your timezone. This correctly handles EST/EDT.
+# The bot will now read the Chat ID from a variable on the hosting service.
+TARGET_CHAT_ID_STR = os.getenv("TARGET_CHAT_ID")
+# Set a default value if the variable isn't found
+TARGET_CHAT_ID = int(TARGET_CHAT_ID_STR) if TARGET_CHAT_ID_STR else 0
+
+# Set your timezone. This correctly handles EST/EDT.
 TIMEZONE = "America/New_York"
 # ---------------------
 
