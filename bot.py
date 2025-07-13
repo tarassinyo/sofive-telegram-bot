@@ -107,4 +107,16 @@ async def receive_poll_update(update: Update, context: CallbackContext) -> None:
     plus_votes = update.poll.options[0].voter_count
 
     # Close the poll if the "+" option reaches 15 votes
-    if plus_votes >=
+    if plus_votes >= 15:
+        logger.info(f"Closing poll {poll_id} as '+' has reached 15 votes.")
+        
+        # Cancel the scheduled auto-close job since this is closing early
+        current_jobs = context.job_queue.get_jobs_by_name(str(poll_id))
+        for job in current_jobs:
+            job.schedule_removal()
+        
+        await context.bot.stop_poll(
+            poll_data[poll_id]['chat_id'],
+            poll_data[poll_id]['message_id']
+        )
+        del poll_data[poll_id]
