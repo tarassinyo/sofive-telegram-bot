@@ -165,7 +165,7 @@ def main() -> None:
     job_queue.run_daily(
         callback=send_weekly_poll,
         # Time is set to 9:00 AM EST/EDT
-        time=datetime.time(hour=14, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
+        time=datetime.time(hour=14, minute=8, second=0, tzinfo=pytz.timezone(TIMEZONE)),
         name="daily_poll_check"
     )
 
