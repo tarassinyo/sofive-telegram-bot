@@ -48,7 +48,7 @@ async def create_and_send_poll(context: CallbackContext, chat_id: int):
     
     next_sunday_date = today + datetime.timedelta(days=days_until_sunday)
     date_str = next_sunday_date.strftime("%m/%d")
-    poll_title = f"Футбол. Неділя {date_str} 10:00am. Sofive"
+    poll_title = f"Футбол. Неділя {date_str} 09:00am. Sofive - Поле #6"
     
     questions = ["+", "-"]
     message = await context.bot.send_poll(
