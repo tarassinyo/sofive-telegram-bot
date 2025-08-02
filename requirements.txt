@@ -1,2 +1,3 @@
 python-telegram-bot[job-queue,persistence]
 pytz
+# Force reinstall v1
