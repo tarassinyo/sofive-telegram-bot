@@ -119,7 +119,7 @@ def main() -> None:
     job_queue = application.job_queue
     job_queue.run_daily(
         callback=send_weekly_poll,
-        time=datetime.time(hour=9, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
+        time=datetime.time(hour=10, minute=0, second=0, tzinfo=pytz.timezone(TIMEZONE)),
         name="daily_poll_check"
     )
 
